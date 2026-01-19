@@ -17,6 +17,9 @@ const Navbar = () => {
       <li>
         <NavLink to="/aboutus">About Us</NavLink>
       </li>
+      <li>
+        <NavLink to="/sendparcel">Send Parcel</NavLink>
+      </li>
     </>
   );
   const { user, logOut } = useAuth();
