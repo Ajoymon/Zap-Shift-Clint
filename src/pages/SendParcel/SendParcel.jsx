@@ -1,18 +1,88 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { useLoaderData } from 'react-router';
+import { useForm, useWatch } from 'react-hook-form';
+import { useLoaderData, useNavigate } from 'react-router';
+import Swal from 'sweetalert2';
+import useAxiosSecurs from '../../hooks/useAxiosSecur';
+import useAuth from '../../hooks/useAuth';
 
 const SendParcel = () => {
-  const serviceCenter = useLoaderData();
-  const regions = serviceCenter.map(c => c.region);
-  console.log(regions);
+  // Ame reakct hook forme data Asba
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm();
+  const { user } = useAuth();
+  const axoiosSecure = useAxiosSecurs();
+  // amr json API taka data Asba
+  const serviceCenter = useLoaderData();
+  // Amr reginons deta dekaba
+  const navigate = useNavigate();
+
+  const regionsDuplicate = serviceCenter.map(c => c.region);
+  const regions = [...new Set(regionsDuplicate)];
+  // explore useMemo
+  const senderRegion = useWatch({ control, name: 'senderRegin' });
+  const receiverRegion = useWatch({ control, name: 'receiverRegin' });
+  //  Amr dectit data dekaba
+  const districtsByRegin = region => {
+    // if (!region) {
+    //   region = 'Dhaka';
+    // }
+    const reginonDistricts = serviceCenter.filter(c => c.region === region);
+    const districts = reginonDistricts.map(d => d.district);
+
+    return districts;
+  };
+
   const handleSendParcel = data => {
     console.log(data);
+    const isDocument = data.parcelType === 'document';
+    const isSmaeDistrict = data.receiverDistrict === data.senderDistrctis;
+    const parcelWeight = parseFloat(data.parcelWeight);
+    let cost = 0;
+    if (isDocument) {
+      cost = isSmaeDistrict ? 60 : 80;
+    } else {
+      if (parcelWeight < 3) {
+        cost = isSmaeDistrict ? 110 : 150;
+      } else {
+        const minCharge = isSmaeDistrict ? 110 : 150;
+        const extraweight = parcelWeight - 3;
+        const extraCharge = isSmaeDistrict
+          ? extraweight * 4
+          : extraweight * 40 + 40;
+        cost = minCharge + extraCharge;
+      }
+    }
+    console.log(cost);
+    data.cost = cost;
+    Swal.fire({
+      title: 'Agree with the cost ?',
+      text: `You will be chargee ${cost} taka!`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Confirem and Continue Payment!',
+    }).then(result => {
+      if (result.isConfirmed) {
+        //
+        axoiosSecure.post('/parcels', data).then(res => {
+          if (res.data.insertedId) {
+            navigate('/dashboard/my-parcels');
+            Swal.fire({
+              position: 'top-end',
+              icon: 'success',
+              title: 'parcel has created. please pay',
+              showConfirmButton: false,
+              timer: 2500,
+            });
+          }
+        });
+      }
+    });
   };
   return (
     <div className="bg-white p-[80px] text-black my-[60px] rounded-2xl">
@@ -64,14 +134,17 @@ const SendParcel = () => {
         </div>
         <div className="w-full border-t mt-[30px] border-gray-400 "></div>
         <div className="mt-[30px] grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* ---------------------------------------------------------------------------- */}
           {/* Sender */}
           <fieldset className="fieldset">
             <h1 className="font-bold text-[15px] mb-[10px]">Sender Details</h1>
+
             {/* Sender Name */}
             <label className="label">Sender Name</label>
             <input
               type="text"
               {...register('senderName')}
+              defaultValue={user?.displayName}
               className="input w-full"
               placeholder="Sender Name"
             />
@@ -80,6 +153,7 @@ const SendParcel = () => {
             <input
               type="email"
               {...register('senderEmail')}
+              defaultValue={user?.email}
               className="input w-full"
               placeholder="Sender Email"
             />
@@ -91,6 +165,7 @@ const SendParcel = () => {
               className="input w-full"
               placeholder="Sender Address"
             />
+
             {/* Sender Phone No */}
             <label className="label mt-[20px]">Sender Phone No</label>
             <input
@@ -102,23 +177,41 @@ const SendParcel = () => {
             {/* Sender region */}
             <fieldset className="fieldset">
               <legend className="fieldset-legend">Sender Regions</legend>
-              <select defaultValue="Pick a browser" className="select">
+              <select
+                {...register('senderRegin')}
+                defaultValue="Dhaka"
+                className="select"
+              >
                 <option disabled={true}>Pick a region</option>
-                <option>Chrome</option>
-                <option>FireFox</option>
-                <option>Safari</option>
+                {regions.map((r, i) => (
+                  <option key={i} value={r}>
+                    {r}
+                  </option>
+                ))}
               </select>
-              <span className="label">Optional</span>
+            </fieldset>
+            {/* render dricts */}
+
+            <fieldset className="fieldset">
+              <legend className="fieldset-legend">Sender District</legend>
+
+              <select
+                {...register('senderDistrctis')}
+                defaultValue="Dhaka"
+                className="select"
+              >
+                <option value="" disabled>
+                  Pick a District
+                </option>
+
+                {districtsByRegin(senderRegion).map((r, i) => (
+                  <option key={i} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
             </fieldset>
 
-            {/*Sender District*/}
-            <label className="label mt-[20px]">Your District</label>
-            <input
-              type="text"
-              {...register('senderDistrict')}
-              className="input w-full"
-              placeholder="Your District"
-            />
             {/* Sender Pickup Instruction*/}
             <label className="label mt-[20px]">Pickup Instruction</label>
             <textarea
@@ -127,11 +220,13 @@ const SendParcel = () => {
               placeholder="Pickup Instruction"
             ></textarea>
           </fieldset>
+          {/* ------------------------------------------- */}
           {/* Receiver */}
           <fieldset className="fieldset">
             <h1 className="font-bold text-[15px] mb-[10px]">
               Receiver Details
             </h1>
+            {/* Receiver name */}
             <label className="label">Receiver Name</label>
             <input
               type="text"
@@ -139,6 +234,7 @@ const SendParcel = () => {
               className="input w-full"
               placeholder="Receiver Name"
             />
+            {/* Receiver email */}
             <label className="label mt-[20px]">Receiver Email</label>
             <input
               type="email"
@@ -146,6 +242,7 @@ const SendParcel = () => {
               className="input w-full"
               placeholder="Receiver Email"
             />
+            {/* Receiver Addrece */}
             <label className="label mt-[20px]">Receiver Address</label>
             <input
               type="text"
@@ -153,6 +250,7 @@ const SendParcel = () => {
               className="input w-full"
               placeholder="Receiver Address"
             />
+            {/* Receiver Phone nomber */}
             <label className="label mt-[20px]">Receiver Phone No</label>
             <input
               type="number"
@@ -160,13 +258,41 @@ const SendParcel = () => {
               className="input w-full"
               placeholder="Receiver Phone No"
             />
-            <label className="label mt-[20px]">Receiver District</label>
-            <input
-              type="text"
-              {...register('receiverDistrict')}
-              className="input w-full"
-              placeholder="Receiver District"
-            />
+            {/* Receiver region */}
+            <fieldset className="fieldset">
+              <legend className="fieldset-legend">Receiver Regions</legend>
+              <select
+                {...register('receiverRegin')}
+                defaultValue="Dhaka"
+                className="select"
+              >
+                <option disabled={true}>Pick a region</option>
+                {regions.map((r, i) => (
+                  <option key={i} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </fieldset>
+
+            {/* Receiver District */}
+            <fieldset className="fieldset">
+              <legend className="fieldset-legend">Receiver District</legend>
+              <select
+                {...register('receiverDistrict')}
+                defaultValue="pick a District"
+                className="select"
+              >
+                <option disabled={true}>Pick a region</option>
+                {districtsByRegin(receiverRegion).map((r, i) => (
+                  <option key={i} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </fieldset>
+
+            {/* Receiver Delivery instruction */}
             <label className="label mt-[20px]">Delivery Instruction</label>
             <textarea
               {...register('receiverInstruction')}
@@ -175,6 +301,7 @@ const SendParcel = () => {
             ></textarea>
           </fieldset>
         </div>
+        {/* time---------------------------------- */}
         <p className="my-[50px]">* PickUp Time 4pm-7pm Approx.</p>
         <input
           type="submit"

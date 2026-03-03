@@ -1,9 +1,10 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import useAuth from '../../../hooks/useAuth';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import SocialLogin from '../SocialLogin/SocialLogin';
 import axios from 'axios';
+import useAxiosSecur from '../../../hooks/useAxiosSecur';
 
 const Register = () => {
   const {
@@ -13,12 +14,12 @@ const Register = () => {
   } = useForm();
 
   const { registerUser, updateUserProfile } = useAuth();
+  const axiosSecure = useAxiosSecur();
+  const navigate = useNavigate();
   const handleRegister = data => {
-    console.log(data.photo[0]);
     const profileImg = data.photo[0];
     registerUser(data.email, data.password)
-      .then(result => {
-        console.log(result.user);
+      .then(() => {
         //store the image and get the photo url
         const formdta = new FormData();
         formdta.append('image', profileImg);
@@ -26,18 +27,31 @@ const Register = () => {
           import.meta.env.VITE_image_host
         }`;
         axios.post(imageApiUrl, formdta).then(res => {
-          console.log(res.data.data.url);
+          const photoURL = res.data.data.url;
+          // create user in the database
+          const userInfo = {
+            email: data.email,
+            displayName: data.name,
+            photoURL: photoURL,
+          };
+          axiosSecure.post('/users', userInfo).then(res => {
+            if (res.data.insertedId) {
+              console.log('user created in the database');
+              navigate('/');
+            }
+          });
           //update user profile
+
           const userProfile = {
             displayName: data.name,
-            photoURL: res.data.data.url,
+            photoURL: photoURL,
           };
           updateUserProfile(userProfile)
             .then(() => {
               console.log('user profile updetad');
             })
             .catch(error => {
-              console.log(error);
+              // console.log(error);
             });
         });
       })

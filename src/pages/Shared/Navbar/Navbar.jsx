@@ -5,6 +5,14 @@ import { Link, NavLink } from 'react-router';
 import useAuth from '../../../hooks/useAuth';
 
 const Navbar = () => {
+  const { user, logOut } = useAuth();
+  const handleLogOut = () => {
+    logOut()
+      .then()
+      .catch(error => {
+        console.log(error);
+      });
+  };
   const links = (
     <>
       <li>
@@ -20,16 +28,20 @@ const Navbar = () => {
       <li>
         <NavLink to="/sendparcel">Send Parcel</NavLink>
       </li>
+      <li>
+        <NavLink to="/rider">Be a Rider</NavLink>
+      </li>
+
+      {user && (
+        <>
+          <li>
+            <NavLink to="/dashboard/my-parcels">My Parcel</NavLink>
+          </li>
+        </>
+      )}
     </>
   );
-  const { user, logOut } = useAuth();
-  const handleLogOut = () => {
-    logOut()
-      .then()
-      .catch(error => {
-        console.log(error);
-      });
-  };
+
   return (
     <div className="navbar bg-base-100 shadow-sm">
       <div className="navbar-start">
