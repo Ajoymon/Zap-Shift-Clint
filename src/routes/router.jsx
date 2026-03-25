@@ -20,6 +20,9 @@ import ApproveRider from '../pages/Dashboard/Myparcels/ApproveRider/ApproveRider
 import Usermanagement from '../pages/Dashboard/Myparcels/Usermanagement/Usermanagement';
 import AdminRoute from './AdminRoute';
 import AssignRiders from '../pages/Dashboard/Myparcels/AssignRiders/AssignRiders';
+import RiderRoute from './RiderRoute';
+import AssignedDeliveries from '../pages/Dashboard/AssignedDeliveries/AssignedDeliveries';
+import CompletedDeliveries from '../pages/Dashboard/CompletedDeliveries/CompletedDeliveries';
 // import AdminRoute from './AdminRoute';
 
 export const router = createBrowserRouter([
@@ -110,6 +113,24 @@ export const router = createBrowserRouter([
         path: 'payment-history',
         Component: PaymentHistory,
       },
+      // Rider only rout
+      {
+        path: 'assigned-deliveries',
+        element: (
+          <RiderRoute>
+            <AssignedDeliveries></AssignedDeliveries>
+          </RiderRoute>
+        ),
+      },
+      {
+        path: 'completed-deliveries',
+        element: (
+          <RiderRoute>
+            <CompletedDeliveries></CompletedDeliveries>
+          </RiderRoute>
+        ),
+      },
+      // Admin only rout
       {
         path: 'approve-riders',
         element: (
@@ -128,7 +149,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'user-management',
-        // Component: Usermanagement,
+
         element: (
           <AdminRoute>
             <Usermanagement></Usermanagement>

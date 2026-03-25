@@ -1,7 +1,14 @@
 import React from 'react';
 import { Link, NavLink, Outlet } from 'react-router';
 import { AiFillTruck } from 'react-icons/ai';
-import { FaMotorcycle, FaRegCreditCard, FaUserEdit } from 'react-icons/fa';
+import {
+  FaMotorcycle,
+  FaRegCreditCard,
+  FaTasks,
+  FaTheaterMasks,
+  FaUserEdit,
+} from 'react-icons/fa';
+
 import useRole from '../hooks/useRole';
 import { RiEBikeFill } from 'react-icons/ri';
 
@@ -98,7 +105,39 @@ const DashboardLayout = () => {
                 <span className="is-drawer-close:hidden">PaymentHistory</span>
               </NavLink>
             </li>
+            {/* only rider Linck */}
+            {role === 'rider' && (
+              <>
+                <li>
+                  <NavLink
+                    className="is-drawer-close:tooltip is-drawer-close:tooltip-right"
+                    data-tip="Assigned Deliveries"
+                    to={'/dashboard/assigned-deliveries'}
+                  >
+                    {/* icon  */}
+                    <FaTasks />
+                    <span className="is-drawer-close:hidden">
+                      Assigned Deliveries
+                    </span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    className="is-drawer-close:tooltip is-drawer-close:tooltip-right"
+                    data-tip="Completed Deliveries"
+                    to={'/dashboard/completed-deliveries'}
+                  >
+                    {/* icon  */}
+                    <FaTheaterMasks />
 
+                    <span className="is-drawer-close:hidden">
+                      Completed Deliveries
+                    </span>
+                  </NavLink>
+                </li>
+              </>
+            )}
+            {/* onle admin Link */}
             {role === 'admin' && (
               <>
                 {/* Approve Riders */}
