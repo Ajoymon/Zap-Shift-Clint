@@ -12,13 +12,17 @@ const AssignedDeliveries = () => {
     enabled: !!user?.email,
     queryFn: async () => {
       const res = await axiosSecure.get(
-        `/parcels/rider?riderEmail=${user.email}&deliverystatus=driver_assigned`,
+        `/parcels/rider?riderEmail=${user.email}&deliveryStatus=driver_assigned`,
       );
       return res.data;
     },
   });
   const hendeleDeliveryStatusUpdate = (parcel, status) => {
-    const statusInfo = { deliverystatus: status };
+    const statusInfo = {
+      deliveryStatus: status,
+      riderId: parcel.riderId,
+      trackingId: parcel.trackingId,
+    };
     let messeg = `parcel Status is updated with ${status.split('_').join(' ')}`;
     axiosSecure.patch(`/parcels/${parcel._id}/status`, statusInfo).then(res => {
       if (res.data.modifiedCount) {
@@ -55,7 +59,7 @@ const AssignedDeliveries = () => {
                 <th>{index + 1}</th>
                 <td>{parcel.parcelName}</td>
                 <td>
-                  {parcel.deliverystatus === 'driver_assigned' ? (
+                  {parcel.deliveryStatus === 'driver_assigned' ? (
                     <>
                       <button
                         onClick={() =>

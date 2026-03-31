@@ -65,6 +65,7 @@ const Myparcels = () => {
       parcelName: parcelItem.parcelName,
       parcelId: parcelItem._id,
       senderEmail: parcelItem.senderEmail,
+      trackingId: parcelItem.trackingId,
     };
 
     const res = await axiosSecure.post(
@@ -110,7 +111,11 @@ const Myparcels = () => {
                   )}
                 </td>
                 <td>{parcel.deliverystatus}</td>
-                <td>{parcel.trackingId}</td>
+                <td>
+                  <Link to={`/parcel-track/${parcel.trackingId}`}>
+                    {parcel.trackingId}
+                  </Link>
+                </td>
                 <td>
                   <button className="btn btn-square hover:bg-green-500">
                     <IoSearch />

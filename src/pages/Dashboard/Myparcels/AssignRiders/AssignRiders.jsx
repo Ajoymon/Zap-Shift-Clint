@@ -11,7 +11,7 @@ const AssignRiders = () => {
     queryKey: ['parcels,', 'pending-pickup'],
     queryFn: async () => {
       const res = await AxiosSecure.get(
-        '/parcels?deliverystatus=pending-pickup',
+        '/parcels?deliveryStatus=pending-pickup',
       );
       return res.data;
     },
@@ -27,6 +27,7 @@ const AssignRiders = () => {
       riderEmail: rider.Email,
       riderName: rider.Name,
       ParcelId: selecteParcel._id,
+      trackingId: selecteParcel.trackingId,
     };
     AxiosSecure.patch(`/parcels/${selecteParcel._id}`, riderAssignInfo).then(
       res => {
